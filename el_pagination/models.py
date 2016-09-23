@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 from django.template import (
     loader,
-    Context,
 )
 from django.utils.encoding import iri_to_uri
 
@@ -57,7 +56,7 @@ class ELPage(utils.UnicodeMixin):
 
     def __unicode__(self):
         """Render the page as a link."""
-        context = Context(self.context)
+        context = dict(self.context)
         context.update({
             'add_nofollow': settings.ADD_NOFOLLOW,
             'page': self,
@@ -176,7 +175,7 @@ class PageList(utils.UnicodeMixin):
                     pages.append(self.last_as_arrow())
                 else:
                     pages.append(self[item])
-            context = Context(self.context)
+            context = dict(self.context)
             context.update({'pages': pages})
             return loader.render_to_string('el_pagination/show_pages.html',
                                            context)

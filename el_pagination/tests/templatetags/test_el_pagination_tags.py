@@ -7,7 +7,6 @@ import xml.etree.ElementTree as etree
 import unittest
 
 from django.template import (
-    Context,
     Template,
     TemplateSyntaxError,
 )
@@ -43,7 +42,6 @@ class TemplateTagsTestMixin(object):
         template = Template('{% load el_pagination_tags %}' + contents)
         context_data = kwargs.copy() if kwargs else {'objects': range(47)}
         context_data['request'] = request
-        context = Context(context_data)
         html = template.render(context)
         return html.strip(), context
 
