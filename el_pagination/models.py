@@ -67,7 +67,7 @@ class ELPage(utils.UnicodeMixin):
             template_name = 'el_pagination/page_link.html'
         template = _template_cache.setdefault(
             template_name, self.context.template.engine.get_template(template_name))
-        with self.context.update(extra_context):
+        with self.context.push(**extra_context):
             return template.render(self.context)
 
 
@@ -176,7 +176,7 @@ class PageList(utils.UnicodeMixin):
                 else:
                     pages.append(self[item])
             template = self.context.template.engine.get_template('el_pagination/show_pages.html')
-            with self.context.update({'pages': pages}):
+            with self.context.push(pages=pages):
                 return template.render(self.context)
         return ''
 
