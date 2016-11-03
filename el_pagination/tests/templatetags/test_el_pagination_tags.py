@@ -42,7 +42,7 @@ class TemplateTagsTestMixin(object):
         template = Template('{% load el_pagination_tags %}' + contents)
         context_data = kwargs.copy() if kwargs else {'objects': range(47)}
         context_data['request'] = request
-        html = template.render(context)
+        html = template.render(context_data)
         return html.strip(), context
 
     def request(self, url='/', page=None, data=None, **kwargs):
