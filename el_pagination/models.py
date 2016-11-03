@@ -2,8 +2,10 @@
 
 from __future__ import unicode_literals
 
+from django.core.exceptions import ImproperlyConfigured
 from django.template import (
     Context,
+    engines,
 )
 from django.utils.encoding import iri_to_uri
 
@@ -37,6 +39,8 @@ class ELPage(utils.UnicodeMixin):
             self, request, number, current_number, total_number,
             querystring_key, label=None, default_number=1, override_path=None,
             context=None):
+        if 'django' not in engines:
+            raise ImproperlyConfigured("el_pagination requires the 'django' template engine")
         self._request = request
         self.number = number
         self.label = utils.text(number) if label is None else label
@@ -56,19 +60,19 @@ class ELPage(utils.UnicodeMixin):
 
     def __unicode__(self):
         """Render the page as a link."""
-        extra_context = {
+        context = Context(self.context)
+        context.update({
             'add_nofollow': settings.ADD_NOFOLLOW,
             'page': self,
             'querystring_key': self.querystring_key,
-        }
+        })
         if self.is_current:
             template_name = 'el_pagination/current_link.html'
         else:
             template_name = 'el_pagination/page_link.html'
         template = _template_cache.setdefault(
-            template_name, self.context.template.engine.get_template(template_name))
-        with self.context.push(**extra_context):
-            return template.render(self.context)
+            template_name, engines['django'].get_template(template_name))
+        return template.render(context)
 
 
 class PageList(utils.UnicodeMixin):
@@ -77,6 +81,8 @@ class PageList(utils.UnicodeMixin):
     def __init__(
             self, request, page, querystring_key,
             default_number=None, override_path=None, context=None):
+        if 'django' not in engines:
+            raise ImproperlyConfigured("el_pagination requires the 'django' template engine")
         self._request = request
         self._page = page
         self.context = context or {}
@@ -175,9 +181,10 @@ class PageList(utils.UnicodeMixin):
                     pages.append(self.last_as_arrow())
                 else:
                     pages.append(self[item])
-            template = self.context.template.engine.get_template('el_pagination/show_pages.html')
-            with self.context.push(pages=pages):
-                return template.render(self.context)
+            context = Context(self.context)
+            context.update({'pages': pages})
+            template = engines['django'].get_template('el_pagination/show_pages.html')
+            return template.render(context)
         return ''
 
     def current(self):
