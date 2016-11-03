@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 from django.template import (
-    loader,
+    Context,
 )
 from django.utils.encoding import iri_to_uri
 
@@ -56,19 +56,19 @@ class ELPage(utils.UnicodeMixin):
 
     def __unicode__(self):
         """Render the page as a link."""
-        context = dict(self.context)
-        context.update({
+        extra_context = {
             'add_nofollow': settings.ADD_NOFOLLOW,
             'page': self,
             'querystring_key': self.querystring_key,
-        })
+        }
         if self.is_current:
             template_name = 'el_pagination/current_link.html'
         else:
             template_name = 'el_pagination/page_link.html'
         template = _template_cache.setdefault(
-            template_name, loader.get_template(template_name))
-        return template.render(context)
+            template_name, self.context.template.engine.get_template(template_name))
+        with self.context.update(extra_context):
+            return template.render(self.context)
 
 
 class PageList(utils.UnicodeMixin):
@@ -175,10 +175,9 @@ class PageList(utils.UnicodeMixin):
                     pages.append(self.last_as_arrow())
                 else:
                     pages.append(self[item])
-            context = dict(self.context)
-            context.update({'pages': pages})
-            return loader.render_to_string('el_pagination/show_pages.html',
-                                           context)
+            template = self.context.template.engine.get_template('el_pagination/show_pages.html')
+            with self.context.update({'pages': pages}):
+                return template.render(self.context)
         return ''
 
     def current(self):
